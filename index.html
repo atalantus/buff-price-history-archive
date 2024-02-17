@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chart</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            height: 100vh;
+            width: 100vw;
+            background-color: #212529;
+            color: #dee2e6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        #container {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 576px) {
+            #container {
+                max-width: 540px;
+            }
+        }
+
+        @media (min-width: 768px) {
+            #container {
+                max-width: 720px;
+            }
+        }
+
+        @media (min-width: 992px) {
+            #container {
+                max-width: 960px;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            #container {
+                max-width: 1140px;
+            }
+        }
+
+        @media (min-width: 1400px) {
+            #container {
+                max-width: 1320px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div style="width: 100%; display: flex; flex-direction: row; align-items: center">
+    <div style="margin-right: auto; margin-left: 2.5rem; width: 40px"></div>
+    <h1 style="flex-grow: 1; text-align: center">Buff.163 CS Items Price History</h1>
+    <a style="margin-left: auto; margin-right: 2.5rem" href="https://github.com/atalantus/buff-price-history-archive"><img width="40px" src="github-mark-white.svg" alt="GitHub"></a>
+</div>
+
+<div id="container">
+    <div id="loadingOverlay" style="display: block; font-size: xx-large; margin-top: 25%">Loading Data...</div>
+    <div id="canvasContainer" style="display: none; position: relative; margin-top: 4rem">
+        <canvas id="priceGraph"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+<script src="xzwasm.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<script src="./chart.js" type="module"></script>
+</body>
+</html>
