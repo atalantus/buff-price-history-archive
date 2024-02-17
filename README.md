@@ -16,7 +16,8 @@ Note that there's no guarantee that all the data is 100% correct.
 The data is provided as three compressed json files.
 
 **price-history-raw.json.xz:**<br>
-The raw data source with up to multiple price points per day
+The raw data source with up to multiple price points per day.<br>
+Note that since this file is 113 MB in size it is stored using [Git LFS](https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-git-large-file-storage).
 
 **price-history-daily.json.xz:**<br>
 One price point per day
