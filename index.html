@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Buff Price History</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
     <style>
         html, body {
             margin: 0;
@@ -57,24 +58,57 @@
                 max-width: 1320px;
             }
         }
+
+        .ui-widget.ui-widget-content {
+            border: 1px solid #495057;
+        }
+
+        .ui-widget-content {
+            background-color: #212529;
+            color: #dee2e6;
+        }
+
+        .ui-menu-item-wrapper.ui-state-active {
+            border: 1px solid #0b5ed7;
+            background: #0d6efd;
+            font-weight: normal;
+            color: #fff;
+        }
+
+        .ui-menu .ui-menu-item-wrapper {
+            text-align: left;
+        }
     </style>
 </head>
 
 <body>
-<div style="width: 100%; display: flex; flex-direction: row; align-items: center">
-    <div style="margin-right: auto; margin-left: 2.5rem; width: 40px"></div>
-    <h1 style="flex-grow: 1; text-align: center">Buff.163 CS Items Price History</h1>
-    <a style="margin-left: auto; margin-right: 2.5rem" href="https://github.com/atalantus/buff-price-history-archive"><img width="40px" src="github-mark-white.svg" alt="GitHub"></a>
+<div style="width: 100%; display: flex; flex-direction: row; justify-content: space-around; align-items: center; flex-wrap: wrap">
+    <div style="width: 40px"></div>
+    <h1 style="padding: 0 20px">Buff.163 CS Items Price History</h1>
+    <a style="width: 40px" href="https://github.com/atalantus/buff-price-history-archive"><img width="100%"
+                                                                                               src="github-mark-white.svg"
+                                                                                               alt="GitHub"></a>
 </div>
 
 <div id="container">
     <div id="loadingOverlay" style="display: block; font-size: xx-large; margin-top: 25%">Loading Data...</div>
-    <div id="canvasContainer" style="display: none; position: relative; margin-top: 4rem">
+    <div id="canvasContainer" style="display: none; position: relative; margin-top: 5vh">
+        <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <label id="addItemLabel" style="font-size: large" for="addItem">Add Item:&ensp;</label>
+            <input style="background-color: #dee2e6; border: 0; border-radius: 2px; font-size: medium; min-width: 25px; width: 250px; max-width: 250px"
+                   type="text" name="addItem" id="addItem">
+        </div>
+        <div style="height: 0; display: flex; flex-direction: row; justify-content: center; margin-bottom: 1.25rem">
+            <div id="autocompleteAlign"></div>
+        </div>
         <canvas id="priceGraph"></canvas>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"
+        integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>
 <script src="xzwasm.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>

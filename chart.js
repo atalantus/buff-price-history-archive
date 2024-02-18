@@ -5,9 +5,16 @@ const version = 1;
 Chart.defaults.borderColor = '#424949';
 Chart.defaults.color = '#AEB6BF';
 
-let filter = "Aquamarine Revenge";
+let items = [];
+
+let selectedItems = new Set();
 
 let data = {};
+
+function addItem(key) {
+    selectedItems.add(key);
+    generate();
+}
 
 function generate() {
     if (myChart !== null) {
@@ -17,7 +24,7 @@ function generate() {
     let filteredData = [];
 
     for (const [key, val] of Object.entries(data)) {
-        if (!key.includes(filter)) {
+        if (!selectedItems.has(key)) {
             continue;
         }
 
@@ -46,7 +53,7 @@ function generate() {
         options: {
             plugins: {
                 legend: {
-                    maxHeight: 180,
+                    maxHeight: 95,
                     display: true
                 },
                 tooltip: {
@@ -77,7 +84,7 @@ function generate() {
                 }
             },
             parsing: false,
-            normalized: true
+            normalized: true,
         }
     });
 }
@@ -126,11 +133,43 @@ async function loadData() {
     ov.css('display', 'block');
     cv.css('display', 'none');
 
-    // fetch data
-    const compressedRes = await fetch(`price-history-weekly.json.xz`);
+    const itemRes = await fetch('items-included.json');
+    items = await itemRes.json();
+    $('#addItem').autocomplete({
+        position: {
+            my: 'center top+1',
+            of: '#autocompleteAlign'
+        },
+        select: (evnt, ui) => {
+            addItem(ui.item.value);
+            $('#addItem').val('');
+            return false;
+        },
+        source: (req, res) => {
+            const fs = req.term.toLowerCase().split(' ').map(f => f.trim());
 
+            const matches = [];
+
+            for (const i of items) {
+                const il = i.toLowerCase();
+
+                if (selectedItems.has(i) || fs.some(f => !il.includes(f))) {
+                    continue;
+                }
+
+                matches.push(i);
+
+                if (matches.length === 10) {
+                    break;
+                }
+            }
+
+            res(matches);
+        }
+    });
+
+    const compressedRes = await fetch('price-history-weekly.json.xz');
     const decompressedRes = new Response(new xzwasm.XzReadableStream(compressedRes.body));
-
     data = await decompressedRes.json();
 
     ov.css('display', 'none');
