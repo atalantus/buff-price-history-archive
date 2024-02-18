@@ -1,7 +1,7 @@
 # Buff.163 CS Items Price History Archive
 
 This repository aims to publicly archive the minimum listing price history of all(*)
-Counter-Strike items on the marketplace [buff.163.com](https://buff.163.com/) starting 
+Counter-Strike items from the marketplace [buff.163.com](https://buff.163.com/) starting 
 from **26.07.2021** until around **19.01.2024**.
 
 If you suspect any inconsistencies, errors or have any suggestions feel free to open an issue.
@@ -9,6 +9,8 @@ If you suspect any inconsistencies, errors or have any suggestions feel free to 
 Data source provided by https://twitter.com/cantryde
 
 Note that there's no guarantee that all the data is 100% correct.
+
+A demo for visualising the `price-history-weekly` dataset can be found [on this website](https://atalantus.github.io/buff-price-history-archive/).
 
 (*) Some items are missing. See [`missing-items.txt`](./missing-items.txt)
 
