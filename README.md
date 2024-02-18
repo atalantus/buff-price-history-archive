@@ -10,7 +10,10 @@ Data source provided by https://twitter.com/cantryde
 
 Note that there's no guarantee that all the data is 100% correct.
 
-(*) Some items are missing. See [`missing-items.txt`](./missing-items.txt)
+(*) Some items are missing. See [`missing-items.txt`](https://github.com/atalantus/buff-price-history-archive/blob/main/missing-items.txt)
 
 ## Demo
-[This demo website]() visualizes the data from `price-history-weekly.json.xz` using [Chart.js](https://www.chartjs.org/).
+[This demo website](https://atalantus.github.io/buff-price-history-archive/) visualizes the data from `price-history-weekly.json.xz` using [Chart.js](https://www.chartjs.org/).
+
+**Note:** Using XZ-Compression is a bit over the top. Using a lower level (e.g. 4) Brotli-Compression instead is much faster and still
+has close to the same compression ratio as XZ.

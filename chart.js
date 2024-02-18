@@ -1,3 +1,5 @@
+"use strict";
+
 let myChart = null;
 
 const version = 1;
@@ -11,6 +13,8 @@ let selectedItems = new Set();
 
 let data = {};
 
+const storeInLocalStorage = false;
+
 function addItem(key) {
     selectedItems.add(key);
     generate();
@@ -23,110 +27,160 @@ function generate() {
 
     let filteredData = [];
 
-    for (const [key, val] of Object.entries(data)) {
-        if (!selectedItems.has(key)) {
-            continue;
+    if (selectedItems.size > 0) {
+        console.time('filterDataset');
+        for (const [key, val] of Object.entries(data)) {
+            if (!selectedItems.has(key)) {
+                continue;
+            }
+
+            const d = [];
+
+            for (let i = 0; i < val[0].length; i++) {
+                d.push({
+                    x: val[0][i] * 1000, y: +(val[1][i] / 100).toFixed(2), s: val[2][i]
+                });
+            }
+
+            filteredData.push({label: key, data: d, fill: false});
         }
-
-        const d = [];
-
-        for (let i = 0; i < val[0].length; i++) {
-            d.push({
-                x: val[0][i] * 1000,
-                y: +(val[1][i] / 100).toFixed(2),
-                s: val[2][i]
-            });
-        }
-
-        filteredData.push({label: key, data: d, fill: false});
+        console.timeEnd('filterDataset');
     }
-
-    console.log(filteredData);
 
     const ctx = document.getElementById('priceGraph').getContext('2d');
 
+    console.time('chart.js library');
     myChart = new Chart(ctx, {
-        type: 'line',
-        data: {
+        type: 'line', data: {
             datasets: filteredData
-        },
-        options: {
+        }, options: {
             plugins: {
                 legend: {
-                    maxHeight: 95,
-                    display: true
-                },
-                tooltip: {
+                    maxHeight: 95, display: true
+                }, tooltip: {
                     callbacks: {
                         label: function (context) {
                             return [context.dataset.label + ':', context.parsed.y + '¥ (' + context.parsed.s + ' listings)'];
                         }
                     }
                 }
-            },
-            scales: {
+            }, scales: {
                 x: {
-                    type: 'time',
-                    time: {
-                        unit: 'month',
-                        tooltipFormat: 'dd-MM-yyyy'
-                    },
-                    bounds: 'ticks'
-                },
-                y: {
+                    type: 'time', time: {
+                        unit: 'month', tooltipFormat: 'dd-MM-yyyy'
+                    }, bounds: 'ticks'
+                }, y: {
                     ticks: {
                         callback: function (value) {
                             return '¥' + (+value).toLocaleString('en');
                         }
-                    },
-                    type: 'linear',
-                    beginAtZero: true
+                    }, type: 'linear', beginAtZero: true
                 }
-            },
-            parsing: false,
-            normalized: true,
+            }, parsing: false, normalized: true,
         }
     });
+    console.timeEnd('chart.js library');
 }
 
-function encodeUint8ArrToString(uint8Arr) {
-    const arr = new Uint16Array(Math.ceil(uint8Arr.length / 2));
+async function encodeUint8ArrStreamToString(uint8ArrStream) {
+    console.time('encodeUint8ArrStreamToString')
 
-    let i = 0;
-    for (; i < uint8Arr.length - 1; i++) {
-        arr[i / 2] = (uint8Arr[i] << 8) ^ (uint8Arr[++i] & 0xff);
+    let str = '';
+    let size = 0;
+
+    const reader = uint8ArrStream.getReader();
+    while (true) {
+        const {done, value} = await reader.read();
+
+        if (done) {
+            break;
+        }
+
+        console.log('chunk size:', value.length);
+        size += value.length;
+
+        for (let j = 0; j < value.length; j += 2) {
+            const charCode = (value[j] << 8) | (value[j + 1] || 0);
+            str += String.fromCharCode(charCode);
+        }
     }
 
-    arr[i / 2] =
-        (uint8Arr[i] << 8) ^
-        (uint8Arr.length % 2 === 0 ? uint8Arr[i + 1] : 0 & 0xff);
+    console.timeEnd('encodeUint8ArrStreamToString')
 
-    console.log(arr);
-
-    return [String.fromCharCode(...arr), uint8Arr.length];
+    return [str, size];
 }
 
-function decodeStringToUint8Arr(str, size) {
-    const arr = new Uint8Array(size);
+async function decodeStringToUint8ArrStream(str, size, writableStream) {
+    console.time('decodeStringToUint8ArrStream');
+
+    const writer = writableStream.getWriter();
 
     let i = 0;
+
+    const maxBufferSize = 1024 * 128 * 128;
+
+    let bufferIndex = 0;
+    const buffer = new Uint8Array(maxBufferSize);
 
     for (; i < str.length - 1; i++) {
         const char = str.charCodeAt(i);
-        arr[i * 2] = char >> 8;
-        arr[i * 2 + 1] = char & 0xff;
+
+        buffer[bufferIndex++] = char >> 8;
+        buffer[bufferIndex++] = char & 0xff;
+
+        if (bufferIndex > maxBufferSize - 5) {
+            console.log('flush');
+            // flush and reset buffer
+            await writer.write(buffer);
+            bufferIndex = 0;
+        }
     }
 
     const finalChar = str.charCodeAt(i);
-    arr[i * 2] = finalChar >> 8;
+    buffer[bufferIndex++] = finalChar >> 8;
     if (i * 2 + 1 < size) {
-        arr[i * 2 + 1] = finalChar & 0xff;
+        buffer[bufferIndex++] = finalChar & 0xff;
     }
 
-    return arr;
+    console.log('done');
+    await writer.write(buffer);
+    await writer.close();
+
+    console.timeEnd('decodeStringToUint8ArrStream')
+}
+
+async function loadDataFromStorage() {
+    console.time('loadDataFromStorage');
+    const transformStream = new TransformStream(undefined, {highWaterMark: 1}, {highWaterMark: 4});
+
+    const dec = decodeStringToUint8ArrStream(localStorage.getItem(`data-${version}`), +localStorage.getItem(`size-${version}`), transformStream.writable);
+
+    try {
+        data = await (new Response(new xzwasm.XzReadableStream(transformStream.readable))).json();
+    } catch (e) {
+        console.error('wtf man');
+        console.error(e);
+    }
+
+    await dec;
+    console.timeEnd('loadDataFromStorage');
+}
+
+async function fetchData() {
+    localStorage.clear();
+    const compressedRes = await fetch('price-history-weekly.json.xz');
+
+    const streams = compressedRes.body.tee();
+
+    const encoded = encodeUint8ArrStreamToString(streams[0]);
+    const decompress = (new Response(new xzwasm.XzReadableStream(streams[1]))).json();
+
+    return [await encoded, await decompress]
 }
 
 async function loadData() {
+    console.time('loadData');
+
     const ov = $('#loadingOverlay');
     const cv = $('#canvasContainer');
 
@@ -136,16 +190,13 @@ async function loadData() {
     const itemRes = await fetch('items-included.json');
     items = await itemRes.json();
     $('#addItem').autocomplete({
-        position: {
-            my: 'center top+1',
-            of: '#autocompleteAlign'
-        },
-        select: (evnt, ui) => {
+        delay: 100, position: {
+            my: 'center top+1', of: '#autocompleteAlign'
+        }, select: (evnt, ui) => {
             addItem(ui.item.value);
             $('#addItem').val('');
             return false;
-        },
-        source: (req, res) => {
+        }, source: (req, res) => {
             const fs = req.term.toLowerCase().split(' ').map(f => f.trim());
 
             const matches = [];
@@ -168,16 +219,37 @@ async function loadData() {
         }
     });
 
-    const compressedRes = await fetch('price-history-weekly.json.xz');
-    const decompressedRes = new Response(new xzwasm.XzReadableStream(compressedRes.body));
-    data = await decompressedRes.json();
+    if (storeInLocalStorage && localStorage.getItem(`data-${version}`) !== null && localStorage.getItem(`size-${version}`) !== null) {
+        try {
+            await loadDataFromStorage();
+            console.log('loaded data from local storage');
+        } catch (e) {
+            console.error(e);
+
+            const [[str, size], d] = await fetchData();
+            data = d;
+            localStorage.setItem(`data-${version}`, str);
+            localStorage.setItem(`size-${version}`, size.toString());
+            console.log('fetched data');
+        }
+    } else {
+        const [[str, size], d] = await fetchData();
+        data = d;
+        localStorage.setItem(`data-${version}`, str);
+        localStorage.setItem(`size-${version}`, size.toString());
+        console.log('fetched data');
+    }
 
     ov.css('display', 'none');
     cv.css('display', 'block');
+
+    console.timeEnd('loadData');
 }
 
 $(document).ready(async () => {
     await loadData();
+
+    console.log(Object.entries(data)[0]);
 
     generate();
 });
