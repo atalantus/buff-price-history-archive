@@ -96,7 +96,6 @@ async function encodeUint8ArrStreamToString(uint8ArrStream) {
             break;
         }
 
-        console.log('chunk size:', value.length);
         size += value.length;
 
         for (let j = 0; j < value.length; j += 2) {
@@ -247,9 +246,11 @@ async function loadData() {
 }
 
 $(document).ready(async () => {
-    await loadData();
+    if (!!window.chrome) {
+        await loadData();
 
-    console.log(Object.entries(data)[0]);
-
-    generate();
+        generate();
+    } else {
+        $('#browserOverlay').css('display', 'block');
+    }
 });
