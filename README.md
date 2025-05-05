@@ -10,9 +10,15 @@ Data source provided by https://twitter.com/cantryde
 
 Note that there's no guarantee that all the data is 100% correct.
 
-A demo for visualising the `price-history-weekly` dataset can be found [on this website](https://atalantus.github.io/buff-price-history-archive/).
-
 (*) Some items are missing. See [`missing-items.txt`](./missing-items.txt)
+
+## Demo
+[This demo website](https://atalantus.github.io/buff-price-history-archive/) visualizes the data from `price-history-weekly.json.xz` using [Chart.js](https://www.chartjs.org/).
+
+Due to some weird JSON parsing issues this website only works in Chromium-based Browsers.
+
+**Note:** Using XZ-Compression is a bit over the top. Using a lower level (e.g. 4) Brotli-Compression instead is much faster and still
+has close to the same compression ratio as XZ.
 
 ## Repository Contents
 The data is provided as three compressed json files.
